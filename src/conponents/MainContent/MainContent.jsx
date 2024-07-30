@@ -41,45 +41,35 @@ export const MainContent = () => {
     const filterData = (data, search) => {
         const searchLower = search.toLowerCase();
 
-        const matchesSearchTerm = (node) => {
-            if (typeof node === 'string') {
-                return node.toLowerCase().includes(searchLower);
+        const matchesSearchTerm = (key, value) => {
+            if (key.toLowerCase().includes(searchLower)) {
+                return true;
             }
 
-            if (typeof node === 'object' && node !== null) {
-
-                return Object.entries(node).some(([key, value]) => {
-                    if (key.toLowerCase().includes(searchLower)) {
-                        return true;
-                    }
-                    if (typeof value === 'string' && value.toLowerCase().includes(searchLower)) {
-                        return true;
-                    }
-                    return matchesSearchTerm(value);
-                });
-            }
-
-            return false;
+            return typeof value === 'string' && value.toLowerCase().includes(searchLower);
         };
 
         const buildFilteredData = (node) => {
             if (typeof node === 'object' && node !== null) {
                 const filteredNode = {};
 
+                let hasMatchingChild = false;
+
                 Object.entries(node).forEach(([key, value]) => {
-                    if (matchesSearchTerm(value)) {
+                    if (matchesSearchTerm(key, value) || (typeof value === 'object' && buildFilteredData(value))) {
                         filteredNode[key] = buildFilteredData(value);
+                        hasMatchingChild = true;
                     }
                 });
 
-                return filteredNode;
+                return hasMatchingChild ? filteredNode : null;
             }
+
             return node;
         };
 
         return buildFilteredData(data);
     };
-
 
     const handleToggle = (key) => {
         setExpandedKeys((prev) => {
